@@ -1,0 +1,16 @@
+- name: kubeadm init master
+  shell: kubeadm init --token {{ kube_token }} --token-ttl 0 --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address={{ master_ip }}
+
+- name: craete kubeconfig directory
+  file:
+    path: ~/.kube
+    state: directory
+
+- name: copy admin kubeconfig
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: ~/.kube/config
+    remote_src: yes
+    
+- name: install flannel network addon
+  shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml

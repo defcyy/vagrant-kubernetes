@@ -1,0 +1,3 @@
+- name: add kubernetes cluster node
+  shell: kubeadm join {{ master_ip }}:6443 --token {{ kube_token }} --discovery-token-unsafe-skip-ca-verification
+ 

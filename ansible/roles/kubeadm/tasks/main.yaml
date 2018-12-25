@@ -1,0 +1,51 @@
+- name: change hostname
+  hostname:
+    name: "{{ hostname }}"
+
+- name: change hostname file
+  lineinfile:
+    path: /etc/hosts
+    line: "127.0.0.1    {{ hostname }}"
+    state: present
+
+- name: add kubernetes repository
+  yum_repository:
+    name: kubernetes
+    description: kubernetes's yum repository
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    gpgcheck: yes
+    repo_gpgcheck: yes
+    gpgkey:
+      - https://packages.cloud.google.com/yum/doc/yum-key.gpg
+      - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    exclude: kube*
+
+- name: install rpms
+  yum:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    disable_excludes: kubernetes
+    update_cache: true
+
+- name: ensure net.bridge.bridge-nf-call-ip6tables is set to 1
+  sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: 1
+    state: present
+
+- name: ensure net.bridge.bridge-nf-call-iptables is set to 1
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1
+    state: present
+
+- name: disable swap
+  shell: swapoff -a
+
+- name: start kubelet service
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes

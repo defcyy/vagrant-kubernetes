@@ -1,0 +1,47 @@
+- name: install requirements
+  yum:
+    name:
+      - yum-utils 
+      - device-mapper-persistent-data
+      - lvm2
+    state: present
+    update_cache: true
+
+- name: add docker's yum repository
+  shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+- name: install docker
+  yum:
+    name: docker-ce
+    state: present
+    update_cache: true
+
+- name: make directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/docker
+    - /etc/systemd/system/docker.service.d
+
+- name: copy daemon.json file
+  copy:
+    src: ../files/daemon.json
+    dest: /etc/docker/daemon.json
+
+- name: disable SELinux
+  shell: setenforce 0
+  ignore_errors: yes
+  changed_when: false
+
+- name: set SELinux as permissive
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: start docker service
+  systemd:
+    name: docker
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
